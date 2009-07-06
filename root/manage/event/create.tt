@@ -5,6 +5,7 @@
 [% END %]
 
 <form name="newEvent" method="POST">
+
 <div class="event">
   Nominee: <select name="nominee">[% FOREACH nom IN nominees.all %]
     [% IF nom.email.length != 32 # Skip MD5SUMs of emails %]
@@ -12,7 +13,10 @@
     [% END %]
   [% END %]</select>
   <br/>
-  
+ 
+  <em>Select an existing venue to pre-fill details, or else select Other and
+  fill them in yourself:</em><br/>
+
   Venue: <select name="venue">
     <option value="">Other</option>
     [% FOREACH pub IN venues.all %]
@@ -20,15 +24,13 @@
     [% END %]
   </select>
   <br/>
-  Other: <input type="text" name="venue_other" size="48" /><br/>
-  <em>To enter free-text please select "Other" in the pub list!</em>
-  Address: <input type="text" name="venue_other" size="48" /><br/>
-  <br/><em>Only needed if Other selected above.</em><br/>
+  Venue name: <input type="text" name="venue_name" size="48" /><br/>
+  Address: <input type="text" name="address" size="48" /><br/>
+  Start time: <input type="text" name="starttime" size="48" /><br/>
+  Comment: <input type="text" name="comment" size="48" /><br/>
 
   Date: <input type="text" size="16" name="date" /><br/>
   <em>Use DD/MM/YYYY or YYYY-MM-DD date formats.</em><br/>
-
-  Comment: <input type='text' size='80' name='comment'/><br/>
 
   <input type="submit" value="Create"/>
 </div>
@@ -39,6 +41,10 @@
     $('input[name=date]').datepicker(
         { dateFormat: 'dd/mm/yy' }
     );
+    $('select[name=venue]').change(function() {
+        // TODO: Use AJAX to query venue details from backend, and then
+        // prefill the form in..
+    });
   });
 </script>
 

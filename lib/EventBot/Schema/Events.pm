@@ -35,6 +35,12 @@ __PACKAGE__->add_columns(
         data_type => 'POINT',
         is_nullable => 1
     },
+    # If a user creates an event via the web, it is UNconfirmed initially..
+    confirmed => {
+        data_type => 'BOOLEAN',
+        is_nullable => 0,
+        default => 1,
+    },
 );
 __PACKAGE__->set_primary_key('id');
 
