@@ -4,10 +4,12 @@ use strict;
 use warnings;
 use feature qw(switch);
 
+use Carp qw(croak);
 use Mail::Address;
 use Email::Simple;
 use Email::Simple::Creator;
 use Email::Send;
+use Config::General;
 use EventBot::Schema;
 use EventBot::MailParser;
 use base 'Class::Accessor';
@@ -20,21 +22,24 @@ sub new {
     my $self = bless {}, $class;
 
     $self->logfile($args->{logfile});
-    # TODO: Get addresses from config file
-    $self->from_addr('eventbot@dryft.net');
-    $self->list_addr('sluts@twisted.org.uk');
+
+    # Get addresses from config file
+    croak("Config file not specified") unless $args->{config};
+    my %config = Config::General->new($args->{config})->getall;
+    die("Failed to read valid configuration!") unless %config;
+
+    $self->from_addr($config{from_addr});
+    $self->list_addr($config{list_addr});
 
     $self->schema( EventBot::Schema->connect(
-        # TODO: Take database params from config file
-        'dbi:Pg:dbname=eventbot', undef, undef,
+        $config{database}->{dsn},
+        $config{database}->{username},
+        $config{database}->{password},
         {
             AutoCommit => 1,
             pg_enable_utf8 => 1,
-            pg_server_prepare =>1
         }
     ));
-
-    $self->parser(EventBot::MailParser->new);
 
     return $self;
 }
@@ -42,6 +47,8 @@ sub new {
 sub parse_email {
     my ($self, $email) = @_;
     my ($sender, $event_id);
+
+    $self->parser(EventBot::MailParser->new);
 
     $self->parser->parse($email);
 
@@ -94,7 +101,7 @@ sub find_event {
 
 sub log {
     my ($self, $msg) = @_;
-    if (defined $self->logfile) {
+    if (defined $self->logfile and not $ENV{EVENTBOT_TEST}) {
         $self->logfile->print("$msg\n");
     }
     else {
@@ -108,9 +115,11 @@ our %keyconv = (
     'place' => 'place',
     'url'  => 'url',
     'comments' => 'comments',
+    'link' => 'url',
 );
 
 # NOTE: This function is from previous version of eventbot..
+# I think I've migrated it across OK now.
 sub do_newevent {
     my ($self, $vars) = @_;
 
@@ -133,11 +142,16 @@ sub do_newevent {
             $new{$keyconv{$_}} = $vars->{$_};
         }
     }
+
     # Kludge for comment->URL
-    if (not $new{url} and $new{comments} =~ /^(http:[^\s]+)/) {
+    if (not $new{url}
+        and $new{comments}
+        and $new{comments} =~ /^(http:[^\s]+)/
+    ) {
         $new{url} = $1;
         delete $new{comments};
     }
+
     $event = $self->schema->resultset('Events')->create(\%new);
     $self->log("Created new event, id " . $event->id);
     # At this point, I should email the list to say..
@@ -189,6 +203,9 @@ EOM
         ],
         body => $body
     );
+
+    # Do not *actually* send email if we're testing:
+    return if $ENV{EVENTBOT_TEST};
 
     Email::Send->new({mailer => 'Sendmail'})->send($email->as_string);
 #    my $mailer = Email::Send->new({mailer => 'SMTP'});
@@ -266,10 +283,19 @@ Toby Corkindale, tjc@cpan.org
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2006 by Toby Corkindale
+Copyright (c) 2006, 2009 by Toby Corkindale, all rights reserved.
 
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself, either Perl version 5.10.0 or,
-at your option, any later version of Perl 5 you may have available.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see http://www.gnu.org/licenses/
 
 =cut
