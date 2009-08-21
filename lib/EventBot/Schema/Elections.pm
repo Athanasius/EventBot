@@ -10,7 +10,7 @@ __PACKAGE__->add_columns(
     created => {
         data_type => 'TIMESTAMP',
         is_nullable => 0, 
-        default_value => \'CURRENT_TIMESTAMP'
+        default_value => 'CURRENT_TIMESTAMP'
     },
     enabled => {
         data_type => 'BOOLEAN',
