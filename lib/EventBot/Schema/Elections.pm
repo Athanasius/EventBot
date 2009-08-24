@@ -36,6 +36,10 @@ __PACKAGE__->might_have(
     'winner' => 'EventBot::Schema::Pubs',
     { 'foreign.id' => 'self.winner' }
 );
+__PACKAGE__->has_many(
+    'voters' => 'EventBot::Schema::Voters',
+    { 'foreign.election_id' => 'self.id' }
+);
 
 sub candidates {
     my ($self, @pubs) = @_;

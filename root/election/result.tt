@@ -25,10 +25,16 @@
 <div class="event">
   <h4>Votes:</h4>
   <ul>
-  [% FOREACH vote IN election.votes %]
-  <li><a href="/people/view/[% vote.person.name %]">[% vote.person.name %]</a>
-    ([% vote.person.email_redacted %]): [% vote.pub.name %]</li>
-  [% END %]
+    [% FOREACH voter IN election.voters %]
+      <li>
+        <a href="/people/view/[% voter.person_id.name %]">[% voter.person_id.name %]</a> ([% voter.person_id.email_redacted %])
+        <ul>
+          [% FOREACH vote IN voter.votes %]
+            <li>[% vote.pub.name %]</li>
+          [% END %]
+        </ul>
+      </li>
+    [% END %]
   </ul>
 </div>
 

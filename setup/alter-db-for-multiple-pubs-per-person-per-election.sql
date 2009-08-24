@@ -34,3 +34,8 @@ ALTER TABLE votes ALTER COLUMN id SET DEFAULT nextval('votes_id_seq'::regclass);
 UPDATE votes SET id = nextval('votes_id_seq');
 -- And finally clean things up by now specifying the new column is NOT NILL
 ALTER TABLE votes ALTER COLUMN id SET NOT NULL;
+
+-- This view is a way to get at voters per election without considering
+-- all their votes, and without having too much of a 'flag day' on the
+-- database structure.
+CREATE VIEW voters AS SELECT DISTINCT elections.id as election_id, people.id as person_id FROM elections,people,votes WHERE votes.election = elections.id AND people.id = votes.person;
