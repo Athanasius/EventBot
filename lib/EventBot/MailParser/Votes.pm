@@ -8,16 +8,19 @@ sub parse {
     my @lines = split("\n", $body);
     foreach my $line (@lines) {
         # Detect election votes:
-        if (my @votes = $line =~
+        if ($line =~
             /^
             \s*
-            I\svote\s*:\s*
-            ([A-Za-z])\s*
-            ([A-Za-z])?\s*
-            ([A-Za-z])?\s*
-            ([A-Za-z])?\s*
-            /x
+            I\s+vote\s*:\s*
+	    ((?:[a-z](?:\s+[a-z])*\s*)?)
+	    $
+            /ix
         ) {
+            my $vote_data = uc($1);
+            my @votes;
+            while($vote_data =~ /([A-Z])/g) {
+                push @votes, $1;
+            }
             warn "Found votes: " . join(', ', @votes) . "\n";
             push(@commands, {
                 type => 'vote',

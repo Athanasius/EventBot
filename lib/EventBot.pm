@@ -239,10 +239,6 @@ sub do_votes {
     $person->name($voter->name || $voter->address);
     $person->update;
 
-    # Currently just taking their primary vote..
-    # TODO: Implement full run-off elections, and store all votes in order.
-    my $vote = uc(shift @votes);
-
     # Get the most recent enabled election:
     my $election = $self->schema->resultset('Elections')->current;
     if (not $election) {
@@ -250,7 +246,14 @@ sub do_votes {
         return;
     }
 
-    $election->vote($vote, $person);
+    # TODO: Wipe out this person's old votes for this election
+    $election->vote_wipe($person);
+
+    warn "Recording votes: " . join(', ', @votes) . "\n";
+    # Loop over the votes we found and store them
+    foreach my $vote (@votes) {
+    	$election->vote($vote, $person);
+    }
 }
 
 1;

@@ -79,17 +79,36 @@ sub vote {
     die("Invalid vote, pub $vote ($candidate_id) not found") unless $pub;
 
     $self->result_source->schema->txn_do(sub {
-        $self->search_related('votes',
-            {
-                person => $person->id
-            }
-        )->delete;
         $self->add_to_votes(
             {
                 person => $person,
                 pub => $pub
             }
         );
+    });
+}
+
+=head2 vote_wipe
+
+Wipe out all the votes by the given person on the current election.
+
+Usage:
+
+  $user = $schema->resultset('People')->find(...);
+  $election->vote($user);
+
+=cut
+
+sub vote_wipe {
+    my ($self, $person) = @_;
+    die("Missing person") unless $person;
+
+    $self->result_source->schema->txn_do(sub {
+        $self->search_related('votes',
+            {
+                person => $person->id
+            }
+        )->delete;
     });
 }
 
