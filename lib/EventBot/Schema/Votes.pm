@@ -9,6 +9,7 @@ __PACKAGE__->add_columns(
     election => { data_type => "INTEGER", is_nullable => 0 },
     person => { data_type => "INTEGER", is_nullable => 0 },
     pub => { data_type => 'INTEGER', is_nullable => 0 },
+    id => { data_type => 'INTEGER', is_nullable => 0 },
 );
 __PACKAGE__->set_primary_key(qw(election person pub));
 
